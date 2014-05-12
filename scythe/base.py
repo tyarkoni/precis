@@ -96,6 +96,8 @@ class Dataset(object):
             self.X = self.X.apply(lambda x: x.fillna(x.mean()), axis=0)
             # self.y = self.y.apply(lambda x: x.fillna(x.mean()), axis=0)
 
+        self.n_subjects = len(self.X)
+
 
     def select_subjects(self, inds):
         ''' Trims X and y data to a subset of subjects. '''
@@ -167,13 +169,12 @@ class Dataset(object):
 
 class Measure(object):
 
-    def __init__(self, dataset=None, X=None, y=None, key=None, score=False, trim=False, **kwargs):
+    def __init__(self, dataset=None, X=None, y=None, key=None, trim=False, **kwargs):
         ''' Initialize a new measure. One of dataset or X must be passed.
         Args:
             dataset: Optional dataset to initialize with.
             X: Optional item data to pass to Dataset initializer.
             y: Optional scale scores to pass to Dataset initializer.
-            score: If True, uses the scoring key to generate the y data.
             key: An optional text file providing the scoring key (items x scales).
             trim: When True, drops all X/y columns not used in scoring key.
             kwargs: Additional keyword arguments to pass on to the Dataset initializer.
@@ -186,17 +187,7 @@ class Measure(object):
         self.dataset = dataset
 
         if key is not None:
-            if  isinstance(key, basestring):
-                key = pd.read_csv(key, sep='\t', header=None)
-            if isinstance(key, pd.DataFrame):
-                key = key.values
-
-        self.key = key
-
-        if score:
-            if self.key is None:
-                raise ValueError("No key found in current measure; can't re-score y data!")
-            self.score()
+            self.set_key(key)
 
         if trim:
             self.trim()
@@ -223,9 +214,31 @@ class Measure(object):
             self.dataset.select_y(y_keep)
 
 
-    def score(self, columns=None):
+    def set_key(self, key):
+        """ Set the current scoring key. 
+        Args:
+            key: either a numpy array or the filename of a scoring key.
+                Key format is items in rows, scales in columns, with no index or 
+                header.
+        """
+        if  isinstance(key, basestring):
+            key = pd.read_csv(key, sep='\t', header=None)
+        if isinstance(key, pd.DataFrame):
+            key = key.values
+        self.key = key
+
+
+    def score(self, key=None, columns=None):
         ''' Compute y scores from X data and scoring key. Note: will overwrite any
-        existing y data. '''
+        existing y data. 
+        Args:
+            key: Optional key to use. If passed, replaces any existing key.
+            columns: Optional list of column names for the key.
+        '''
+        if key is not None:
+            self.set_key(key)
+        if self.key is None:
+            raise ValueError("No key found in current measure; can't generate scores!")
         self.dataset.score(self.key, columns)
 
 
@@ -263,6 +276,7 @@ class Measure(object):
         output = []
         output.append('Number of items: %d' % self.n_X)
         output.append('Number of scales: %d' % self.n_y)
+        output.append('Number of subjects: %d' % self.n_subjects)
         # output.append('Items used from original scale: %s' % ', '.join(str(x+1) for x in self.original_items))
 
         # Human-readable scoring key
@@ -292,10 +306,12 @@ class Measure(object):
 
     def __getattr__(self, attr):
         """ Wrap Dataset properties. """
-        if attr in ['n_X', 'n_y', 'X', 'y', 'select_X', 'select_y', 'select_subjects']:
-            return getattr(self.dataset, attr)
-        else:
-            raise AttributeError("%r object has no attribute %r" % (self.__class__, attr))
+        return getattr(self.dataset, attr)
+        # if attr in ['n_X', 'n_y', 'n_subjects', 'X', 'y', 'select_X', 'select_y', 
+        #             'select_subjects', 'y_names']:
+        #     return getattr(self.dataset, attr)
+        # else:
+        #     raise AttributeError("%r object has no attribute %r" % (self.__class__, attr))
 
 
     def save(self, path='.', prefix='', key=True, summary=True, pickle=False, sep='_'):
@@ -330,7 +346,7 @@ class AbbreviatedMeasure(object):
     """ A wrapper for the Measure class that stores both the original, unaltered 
     Measure, and an abbreviated copy. """
 
-    def __init__(self, measure, select, abbreviator=None, evaluator=None, stats=True, trim=True):
+    def __init__(self, measure, select, abbreviator=None, evaluator=None, stats=True, trim=False):
         self.original = measure
         self.abbreviator = abbreviator
         self.evaluator = evaluator
@@ -338,7 +354,7 @@ class AbbreviatedMeasure(object):
         key = self.abbreviator.key
         dataset = copy.deepcopy(measure.dataset)
         dataset.select_X(select)
-        self.original_items = select
+        self.original_items = np.where(select)[0]
         self.abbreviated = Measure(dataset, key=key, trim=trim)
         if stats:
             self.compute_stats()
@@ -348,6 +364,6 @@ class AbbreviatedMeasure(object):
 
     def __str__(self):
         orig = str(self.abbreviated)
-        orig += "\n\nOriginal measure items kept: " + ', '.join([str(x) for x in self.original_items])
+        orig += "\n\nOriginal measure items kept: " + ', '.join([str(x+1) for x in self.original_items])
         return orig
         
