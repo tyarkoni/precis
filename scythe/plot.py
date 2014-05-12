@@ -24,8 +24,6 @@ def make_figure(generator, panels, measure=None, rows=1, cols=None):
         elif p.startswith('corr'):
             scale_intercorrelation_matrix(measure, corr_with=p.split('-')[-1])
 
-    plt.show()
-
 
 def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=False, text=True, totals=False):
     ''' Generate scatterplot of abbreviated vs. original scores for each scale.
@@ -66,7 +64,7 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
         plt.subplot(rows, cols, i+1)
         ax = plt.gca()
         x = abbreviated_y[:,i] + np.random.uniform(-jitter, jitter, n_points)
-        y = original_y[:,i] + np.random.uniform(-jitter, jitter, n_points)
+        y = original_y.ix[:,i] + np.random.uniform(-jitter, jitter, n_points)
         plt.scatter(x, y, s=12, color='black', alpha=alpha)
 
         # Add regression line
@@ -88,7 +86,6 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
         plt.tick_params(axis='both', which='major', labelsize=12)
 
     plt.subplots_adjust(left=0.07, right=0.95, top=0.95, bottom=0.07, hspace=0.4, wspace=0.3)
-    plt.show()
 
 
 def scale_intercorrelation_plot(measure, corr_with='cross', text=True):
@@ -182,6 +179,5 @@ def evolution_plot(generator):
     plt.subplot(133)
     plt.plot(cost)
     plt.ylabel('Cost')
-    plt.xlabel('Generation')      
-    plt.show()
+    plt.xlabel('Generation')
 
