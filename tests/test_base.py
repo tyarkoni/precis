@@ -4,7 +4,9 @@ from scythe.generate import Generator
 import pandas as pd
 import numpy as np
 from helpers import get_test_data_path as tdp
-from os.path import join
+from os.path import join, exists
+import tempfile
+import shutil
 
 class TestBase(unittest.TestCase):
 
@@ -79,12 +81,19 @@ class TestBase(unittest.TestCase):
         self.assertEqual(measure.alpha.dtype, 'float64')
         self.assertTrue(~np.isnan(measure.r_squared).any())
 
-    def test_abbreviator(self):
+    def test_measure_save(self):
+        measure = Measure(X=join(tdp(), 'items.txt'), y=join(tdp(), 'scales.txt'), key=join(tdp(), 'key.txt'), missing='drop')
+        t = tempfile.mkdtemp()
+        measure.save(key=True, summary=True, pickle=True, path=t)
+        self.assertTrue(exists(t + '/key.txt'))
+        self.assertTrue(exists(t + '/data.pkl'))
+        self.assertTrue(exists(t + '/summary.txt'))
+        shutil.rmtree(t)
+
+    def x_test_abbreviator(self):
         measure = Measure(X=join(tdp(), 'items.txt'), y=join(tdp(), 'scales.txt'), key=join(tdp(), 'key.txt'), missing='drop')
         gen = Generator()
         am = gen.run(measure, n_gens=3)
-
-
 
 
 if __name__ == '__main__':
