@@ -38,7 +38,7 @@ class YarkoniEvaluator(Evaluator):
         r_squared = (np.corrcoef(d.y, pred_y, rowvar=0)[0:measure.n_y, measure.n_y::] ** 2).diagonal()
 
         # Item cost: just the scaled number of items kept
-        used = np.abs(measure.key).any(axis=1)
+        used = measure.key.any(axis=1)
         item_cost = np.sum(used) * self.item_cost
 
         # Compute variance cost--just mean variance unaccounted for in each scale

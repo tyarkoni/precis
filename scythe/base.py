@@ -16,12 +16,12 @@ class Dataset(object):
     """ Represents X/y data for Measure training and application, plus some 
     additional helper methods. Mostly just wraps pandas. """
 
-    def __init__(self, X, y, sep='\t', missing=None, select_X=None, select_y=None):
+    def __init__(self, X, y=None, sep='\t', missing=None, select_X=None, select_y=None):
         """
         Args:
             X: The item data. Either the name of a text file containing item scores,
                 or a pandas DataFrame.
-            y: The scale scores. Either the name of a text file containing 
+            y: The scale scores (optional). Either the name of a text file containing 
                 scale scores, or a pandas DataFrame or Series.
             sep: field separator in data files.
             missing: How to handle subjects with missing item scores.
@@ -38,36 +38,36 @@ class Dataset(object):
             except:
                 pass
 
-        if isinstance(y, basestring):
+        if y is not None and isinstance(y, basestring):
             y = pd.read_csv(y, sep=sep).convert_objects(convert_numeric=True)
 
         self.X = X
         self.y = y
 
-        if hasattr(y, 'columns'):
-            self.y_names = self.y.columns
-        else:
-            self.y_names = range(y.shape[1])
+        self.n_subjects = len(self.X)
+
+        # Store item and scale counts
+        self.n_X = self.X.shape[1]
 
         if select_X is not None:
             self.select_X(select_X)
 
-        if select_y is not None:
-            self.select_y(select_y)
+        if y is not None:
+            if hasattr(y, 'columns'):
+                self.y_names = self.y.columns
+            else:
+                self.y_names = range(y.shape[1])
+            if select_y is not None:
+                self.select_y(select_y)
+            self.n_y = self.y.shape[1]
 
         if missing is not None:
             self.process_missing_data(missing)
 
         # Basic validation:
         # if items and scales have different N's, look for an ID column and keep intersection
-        if self.X.shape[0] != self.y.shape[0]:
+        if self.y is not None and self.X.shape[0] != self.y.shape[0]:
             raise ValueError("Number of subjects in item and scale matrices do not match!")
-
-        self.n_subjects = len(self.X)
-
-        # Store item and scale counts
-        self.n_X = self.X.shape[1]
-        self.n_y = self.y.shape[1]
 
 
     def process_missing_data(self, missing='drop'):
@@ -79,13 +79,15 @@ class Dataset(object):
         """
         if missing == 'drop':
             inds = pd.notnull(self.X).all(1).nonzero()[0]
-            inds = np.intersect1d(inds, pd.notnull(self.y).all(1).nonzero()[0])
+            if self.y is not None:
+                inds = np.intersect1d(inds, pd.notnull(self.y).all(1).nonzero()[0])
             n_missing = len(self.X) - len(inds)
 
             if n_missing:
                 # Slice and reindex X and y
                 self.X = self.X.ix[inds]
-                self.y = self.y.ix[inds]
+                if self.y is not None:
+                    self.y = self.y.ix[inds]
                 logger.info('Found and deleted %d subjects with missing data.' % n_missing)
 
         # Imputation. Note that we don't impute the y values, because these should really be 
@@ -98,7 +100,8 @@ class Dataset(object):
     def select_subjects(self, inds):
         ''' Trims X and y data to a subset of subjects. '''
         self.X = self.X.iloc[inds,:]
-        self.y = self.y.iloc[inds,:]
+        if self.y is not None:
+            self.y = self.y.iloc[inds,:]
         self.n_subjects = len(self.X)
 
 
@@ -110,13 +113,21 @@ class Dataset(object):
 
     def select_y(self, cols):
         ''' Trims X to only the specified items. '''
+        if self.y is None:
+            raise ValueError("No y array found in measure; nothing to select from!")
         self.y = self.y.ix[:,cols]
         self.n_y = self.y.shape[1]
 
 
-    def score(self, key):
+    def score(self, key, columns=None):
+        if isinstance(key, basestring):
+            key = pd.read_csv(key, sep='\t', header=None).values
         y = np.dot(self.X, key)
-        self.y = pd.DataFrame(y, columns=self.y.columns)
+        if columns is None:
+            columns = self.y.columns if self.y is not None else range(y.shape[1])
+        self.y = pd.DataFrame(y, columns=columns)
+        self.n_y = self.y.shape[1]
+        self.y_names = self.y.columns
 
 
     def trim(self, subjects=None, items=None, key_only=True):
@@ -156,12 +167,13 @@ class Dataset(object):
 
 class Measure(object):
 
-    def __init__(self, dataset=None, X=None, y=None, key=None, trim=False, **kwargs):
+    def __init__(self, dataset=None, X=None, y=None, key=None, score=False, trim=False, **kwargs):
         ''' Initialize a new measure. One of dataset or X must be passed.
         Args:
             dataset: Optional dataset to initialize with.
             X: Optional item data to pass to Dataset initializer.
             y: Optional scale scores to pass to Dataset initializer.
+            score: If True, uses the scoring key to generate the y data.
             key: An optional text file providing the scoring key (items x scales).
             trim: When True, drops all X/y columns not used in scoring key.
             kwargs: Additional keyword arguments to pass on to the Dataset initializer.
@@ -180,6 +192,11 @@ class Measure(object):
                 key = key.values
 
         self.key = key
+
+        if score:
+            if self.key is None:
+                raise ValueError("No key found in current measure; can't re-score y data!")
+            self.score()
 
         if trim:
             self.trim()
@@ -206,10 +223,10 @@ class Measure(object):
             self.dataset.select_y(y_keep)
 
 
-    def score(self):
+    def score(self, columns=None):
         ''' Compute y scores from X data and scoring key. Note: will overwrite any
         existing y data. '''
-        self.dataset.score(self.key)
+        self.dataset.score(self.key, columns)
 
 
     def compute_stats(self):
