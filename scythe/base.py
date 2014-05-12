@@ -5,6 +5,7 @@ import logging
 from scythe import stats
 import random
 import copy
+import os
 
 
 logger = logging.getLogger('scythe')
@@ -60,23 +61,13 @@ class Dataset(object):
         # Basic validation:
         # if items and scales have different N's, look for an ID column and keep intersection
         if self.X.shape[0] != self.y.shape[0]:
-            logger.error(
-                "Number of subjects in item and scale matrices do not match!")
-            return
-
-        # # Now get rid of pandas because it only slows us down. Given that we're not doing 
-        # # much with it anyway, should probably move to pure numpy.
-        # self.X = self.X.values
-        # self.y = self.y.values
+            raise ValueError("Number of subjects in item and scale matrices do not match!")
 
         self.n_subjects = len(self.X)
 
         # Store item and scale counts
         self.n_X = self.X.shape[1]
         self.n_y = self.y.shape[1]
-
-        # Use data from all subjects by default
-        # self.select_subjects()
 
 
     def process_missing_data(self, missing='drop'):
@@ -109,6 +100,7 @@ class Dataset(object):
         self.X = self.X.iloc[inds,:]
         self.y = self.y.iloc[inds,:]
         self.n_subjects = len(self.X)
+
 
     def select_X(self, cols):
         ''' Trims X to only the specified items. '''
@@ -148,7 +140,6 @@ class Dataset(object):
             self.select_X(items)
 
 
-
     def reverse_items(self, items, max_score=None):
         ''' Reverse scores on the items in the list. 
         Args:
@@ -157,7 +148,6 @@ class Dataset(object):
             max_score: The value of the highest anchor (e.g., on a 5-point likert, 5.)
                 If no value is passed, use the single highest value across the whole matrix.
         '''
-        # items = [x - 1 for x in items]
         if max_score is None:
             max_score = np.max(self.X)
         self.X.ix[:, items] = max_score - self.X.ix[:, items] + 1 
@@ -291,10 +281,32 @@ class Measure(object):
             raise AttributeError("%r object has no attribute %r" % (self.__class__, attr))
 
 
-    @property
-    def n_y(self):
-        return self.dataset.n_y
+    def save(self, path='.', prefix='', key=True, summary=True, pickle=False, sep='_'):
+        """ Save Measure information to file(s).
+        Args:
+            path (string): folder to write to.
+            prefix (string): all files will be prepended with this.
+            sep (string): separator between prefix and rest of filenames.
+            key (bool): when True, saves scoring key.
+            summary(bool): when True, saves a text summary of Measure.
+            picke (bool): when True, pickles the Measure.
+        """
+        path = os.path.join(path, prefix)
+        if prefix != '': path += sep
 
+        if key:
+            if not hasattr(self, 'key'):
+                raise AttributeError("No scoring key found in current measure. " +
+                    "Either add a key, or set key=False in save()")
+            np.savetxt(path + 'key.txt', self.key, fmt='%d', delimiter='\t')
+
+        if summary:
+            output = str(self)
+            open(path + 'summary.txt', 'w').write(output)
+
+        if pickle:
+            import pickle
+            pickle.dump(self, open(path + 'data.pkl', 'wb'))
 
 
 class AbbreviatedMeasure(object):
@@ -318,5 +330,7 @@ class AbbreviatedMeasure(object):
         return getattr(self.abbreviated, attr)
 
     def __str__(self):
-        return str(self.abbreviated)
+        orig = str(self.abbreviated)
+        orig += "\n\nOriginal measure items kept: " + ', '.join([str(x) for x in self.original_items])
+        return orig
         
