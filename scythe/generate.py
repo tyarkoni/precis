@@ -32,7 +32,7 @@ class Generator:
         self.evaluator = evaluator
 
         # Deap settings
-        self.zero_to_one_ratio = kwargs.get('zero_to_one_ratio', 0.8)
+        self.zero_to_one_ratio = kwargs.get('zero_to_one_ratio', 0.5)
         self.indpb = kwargs.get('indpb', 0.05)
         self.tourn_size = kwargs.get('tourn_size', 3)
         self.pop_size = kwargs.get('pop_size', 200)
@@ -45,7 +45,6 @@ class Generator:
         stats.register("std", np.std)
         stats.register("min", min)
         self.stats = stats
-        # self.stats = None
 
 
     def _random_boolean(self, zero_to_one_ratio):
@@ -126,7 +125,7 @@ class Generator:
         for gen in range(0, ngen):
 
             # Select the next generation individuals
-            offspring = toolbox.select(population, len(population))
+            offspring = toolbox.select(population, k=len(population))
                 
             # Variate the pool of individuals
             offspring = algorithms.varAnd(offspring, toolbox, cxpb, mutpb)
