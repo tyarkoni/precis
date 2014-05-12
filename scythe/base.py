@@ -32,7 +32,10 @@ class Dataset(object):
         # Read in data
         if isinstance(X, basestring):
             X = pd.read_csv(X, sep=sep).convert_objects(convert_numeric=True)
-            X = X.drop('sample', axis=1)
+            try:
+                X = X.drop('sample', axis=1)
+            except:
+                pass
 
         if isinstance(y, basestring):
             y = pd.read_csv(y, sep=sep).convert_objects(convert_numeric=True)
@@ -117,6 +120,11 @@ class Dataset(object):
         ''' Trims X to only the specified items. '''
         self.y = self.y.ix[:,cols]
         self.n_y = self.y.shape[1]
+
+
+    def score(self, key):
+        y = np.dot(self.X, key)
+        self.y = pd.DataFrame(y, columns=self.y.columns)
 
 
     def trim(self, subjects=None, items=None, key_only=True):
@@ -208,6 +216,12 @@ class Measure(object):
             self.dataset.select_y(y_keep)
 
 
+    def score(self):
+        ''' Compute y scores from X data and scoring key. Note: will overwrite any
+        existing y data. '''
+        self.dataset.score(self.key)
+
+
     def compute_stats(self):
         ''' Compute several statistics and metrics. '''
 
@@ -271,7 +285,7 @@ class Measure(object):
 
     def __getattr__(self, attr):
         """ Wrap Dataset properties. """
-        if attr in ['n_X', 'n_y', 'X', 'y']:
+        if attr in ['n_X', 'n_y', 'X', 'y', 'select_X', 'select_y', 'select_subjects']:
             return getattr(self.dataset, attr)
         else:
             raise AttributeError("%r object has no attribute %r" % (self.__class__, attr))
@@ -287,13 +301,16 @@ class AbbreviatedMeasure(object):
     """ A wrapper for the Measure class that stores both the original, unaltered 
     Measure, and an abbreviated copy. """
 
-    def __init__(self, measure, items, abbreviator=None, evaluator=None, stats=True, trim=True):
+    def __init__(self, measure, select, abbreviator=None, evaluator=None, stats=True, trim=True):
         self.original = measure
         self.abbreviator = abbreviator
         self.evaluator = evaluator
-        self.abbreviator.abbreviate(measure, items)
+        self.abbreviator.abbreviate(measure, select)
         key = self.abbreviator.key
-        self.abbreviated = Measure(copy.deepcopy(measure.dataset), key=key, trim=trim)
+        dataset = copy.deepcopy(measure.dataset)
+        dataset.select_X(select)
+        self.original_items = select
+        self.abbreviated = Measure(dataset, key=key, trim=trim)
         if stats:
             self.compute_stats()
 
