@@ -26,12 +26,23 @@ class YarkoniEvaluator(Evaluator):
 
 
     def __init__(self, item_cost=0.05):
-
+        """
+        Args:
+            item_cost: The increase in cost/loss associated with the addition 
+                of each additional item. For instance, if item_cost = 0.1, a 
+                measure with 100 items will have an associated total item cost 
+                of 10. For details, see Yarkoni (2010).
+        """
         self.item_cost = item_cost
 
 
     def evaluate(self, measure, weights=None):
-
+        """ The loss function used in Yarkoni (2010). Basically, total loss is 
+        just the sum of two components: (a) an item cost that increases in 
+        direct proportion to the number of items retained, and (b) a variance 
+        cost that increases in direct proportion to the amount of unexplained 
+        variance in the original scales.
+        """
         # Compute R^2
         d = measure.dataset
         pred_y = np.dot(d.X, measure.key)

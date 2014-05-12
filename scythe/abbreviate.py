@@ -58,10 +58,22 @@ class Abbreviator(object):
 class TopNAbbreviator(Abbreviator):
 
     def __init__(self, max_items=5, min_r=0.0):
+        """
+        Args:
+            max_items: Maximum number of items that can be used to score a scale.
+            min_r: Minimum absolute correlation an item must have with the full scale 
+                in order to be included in scoring.
+        """
         self.max_items = max_items
         self.min_r = min_r
 
     def _make_key(self, X, y):
+        """ Scales are abbreviated as follows. First, for each scale, we rank-order all 
+            items by size of absolute correlation with total scale score. Next, we 
+            mask out all items with correlations less than min_r. Then, we retain only 
+            the top N items. The resulting (signed) set of items constitutes the scoring 
+            key for that scale. 
+        """
         n_X, n_y = X.shape[1], y.shape[1]
         key = np.zeros((n_X, n_y))
         cors = np.corrcoef(X, y, rowvar=0)[0:n_X, n_X::]
