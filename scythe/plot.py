@@ -51,7 +51,7 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
 
     # Variables we'll need
     abbreviated_y = measure.predicted_y
-    original_y = measure.y
+    original_y = measure.y.values
     names = list(measure.y_names)
     r_squared = list(measure.r_squared)
 
@@ -60,14 +60,14 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
         names.append('Total')
         abbreviated_y = np.hstack((abbreviated_y, np.atleast_2d(np.sum(abbreviated_y, 1)).T))
         original_y = np.hstack((original_y, np.atleast_2d(np.sum(original_y, 1)).T))
-        r_squared.append(np.corrcoef(abbreviated_y[:,-1], original_y[:,-1])[0,1])
+        r_squared.append(np.corrcoef(abbreviated_y[:,-1], original_y[:,-1])[0,1]**2)
 
     n_points = len(abbreviated_y)
     for i in range(abbreviated_y.shape[1]):
         plt.subplot(rows, cols, i+1)
         ax = plt.gca()
         x = abbreviated_y[:,i] + np.random.uniform(-jitter, jitter, n_points)
-        y = original_y.ix[:,i] + np.random.uniform(-jitter, jitter, n_points)
+        y = original_y[:,i] + np.random.uniform(-jitter, jitter, n_points)
         plt.scatter(x, y, s=12, color='black', alpha=alpha)
 
         # Add regression line
