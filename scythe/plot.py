@@ -3,7 +3,15 @@ import math
 import numpy as np
 
 
-def composite(generator, panels, measure=None, rows=1, cols=None, size=None):
+def adjust_figure(fig=None, **kwargs):
+    ''' Make adjustments to figure size etc. '''
+    if fig is None:
+        fig = plt.gcf()
+    if 'size' in kwargs:
+        fig.set_size_inches(kwargs['size'])
+
+
+def composite(generator, panels, measure=None, rows=1, cols=None, **kwargs):
     ''' Plot a composite figure made up of a list of panels. '''
 
     if measure is None:
@@ -24,11 +32,11 @@ def composite(generator, panels, measure=None, rows=1, cols=None, size=None):
         elif p.startswith('corr'):
             scale_correlation_matrix(measure, corr_with=p.split('-')[-1])
 
-    if size is not None:
-        fig.set_size_inches(size)
+    adjust_figure(**kwargs)
 
 
-def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=False, text=True, totals=False):
+def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=False, 
+                text=True, totals=False, **kwargs):
     ''' Generate scatterplot of abbreviated vs. original scores for each scale.
     Args:
         measure: A Measure instance
@@ -89,9 +97,10 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
         plt.tick_params(axis='both', which='major', labelsize=12)
 
     plt.subplots_adjust(left=0.07, right=0.95, top=0.95, bottom=0.07, hspace=0.4, wspace=0.3)
+    adjust_figure(**kwargs)
 
 
-def scale_correlation_matrix(measure, corr_with='cross', text=True):
+def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
     ''' Plot the correlation matrix between scales. 
     Args:
         corr_with: Which sets of variables to correlate.
@@ -159,9 +168,10 @@ def scale_correlation_matrix(measure, corr_with='cross', text=True):
 
     cbar = plt.colorbar()
     cbar.ax.tick_params(labelsize=12)
+    adjust_figure(**kwargs)
 
 
-def history(generator):
+def history(generator, **kwargs):
     ''' Plot evolution of best measure across generations:
     total cost, r-squared, number of items.
     '''
@@ -180,4 +190,5 @@ def history(generator):
     plt.plot(cost)
     plt.ylabel('Cost')
     plt.xlabel('Generation')
+    adjust_figure(**kwargs)
 
