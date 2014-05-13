@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 
-def make_figure(generator, panels, measure=None, rows=1, cols=None):
+def composite(generator, panels, measure=None, rows=1, cols=None, size=None):
     ''' Plot a composite figure made up of a list of panels. '''
 
     if measure is None:
@@ -19,10 +19,13 @@ def make_figure(generator, panels, measure=None, rows=1, cols=None):
         plt.subplot(rows, cols, i+1)
 
         if p.startswith('stat'):
-            plot_generational_stats(generator)
+            history(generator)
 
         elif p.startswith('corr'):
-            scale_intercorrelation_matrix(measure, corr_with=p.split('-')[-1])
+            scale_correlation_matrix(measure, corr_with=p.split('-')[-1])
+
+    if size is not None:
+        fig.set_size_inches(size)
 
 
 def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=False, text=True, totals=False):
@@ -88,7 +91,7 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
     plt.subplots_adjust(left=0.07, right=0.95, top=0.95, bottom=0.07, hspace=0.4, wspace=0.3)
 
 
-def scale_intercorrelation_plot(measure, corr_with='cross', text=True):
+def scale_correlation_matrix(measure, corr_with='cross', text=True):
     ''' Plot the correlation matrix between scales. 
     Args:
         corr_with: Which sets of variables to correlate.
@@ -158,16 +161,13 @@ def scale_intercorrelation_plot(measure, corr_with='cross', text=True):
     cbar.ax.tick_params(labelsize=12)
 
 
-def evolution_plot(generator):
+def history(generator):
     ''' Plot evolution of best measure across generations:
     total cost, r-squared, number of items.
     '''
     mean_rsq = [np.mean(m.r_squared) for m in generator.best_measures]
     n_items = [m.n_X for m in generator.best_measures]
     cost = generator.logbook.select('min')
-    print mean_rsq
-    print n_items
-    print cost
     plt.subplot(131)
     plt.plot(mean_rsq)
     plt.ylabel('Mean R^2')
