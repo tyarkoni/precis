@@ -52,17 +52,22 @@ class Generator:
         return random.random() < zero_to_one_ratio
 
 
-    def run(self, measure, n_gens=100, **kwargs):
+    def run(self, measure, n_gens=100, seed=None, **kwargs):
         ''' Main abbreviated measure generation function.
 
         Args:
             measure: A Measure instance to abbreviate
             n_gens: Number of generations to run GA for
+            seed: Optional integer to use as random seed
             kwargs: Additional keywords to pass on to the evaluation method
                 of the current LossFunction class.
 
         Returns: A list of items included in the abbreviated measure.
         '''
+
+        # Set random seed for both native Python and Numpy, to be safe
+        random.seed(seed)
+        np.random.seed(seed)
 
         # Set up the GA
         creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
