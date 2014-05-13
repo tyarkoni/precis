@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import logging
 from scythe import stats
+from scythe import plot
 import random
 import copy
 import os
@@ -307,11 +308,6 @@ class Measure(object):
     def __getattr__(self, attr):
         """ Wrap Dataset properties. """
         return getattr(self.dataset, attr)
-        # if attr in ['n_X', 'n_y', 'n_subjects', 'X', 'y', 'select_X', 'select_y', 
-        #             'select_subjects', 'y_names']:
-        #     return getattr(self.dataset, attr)
-        # else:
-        #     raise AttributeError("%r object has no attribute %r" % (self.__class__, attr))
 
 
     def save(self, path='.', prefix='', key=True, summary=True, pickle=False, sep='_'):
@@ -340,6 +336,16 @@ class Measure(object):
         if pickle:
             import pickle
             pickle.dump(self, open(path + 'data.pkl', 'wb'))
+
+
+    def plot_scale_correlation_matrix(self, **kwargs):
+        """ Convenience wrapper for scale_correlation_matrix() in plot module. """
+        return plot.scale_correlation_matrix(self, **kwargs)
+
+
+    def plot_scale_scatter_plot(self, **kwargs):
+        """ Convenience wrapper for scale_scatter_plot() in plot module. """
+        return plot.scale_scatter_plot(self, **kwargs)
 
 
 class AbbreviatedMeasure(object):

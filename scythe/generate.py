@@ -6,6 +6,7 @@ import logging
 import random
 from scythe import abbreviate
 from scythe import evaluate
+from scythe import plot
 from scythe.base import AbbreviatedMeasure
 
 
@@ -163,4 +164,9 @@ class Generator:
     def save(self):
         ''' Save results of abbreviation. '''
         pass
+
+
+    def plot_history(self, **kwargs):
+        ''' Convenience wrapper for history() in plot module. '''
+        return plot.history(self, **kwargs)
 
