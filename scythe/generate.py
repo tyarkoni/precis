@@ -40,12 +40,8 @@ class Generator:
         self.cxpb = kwargs.get('cxpb', 0.8)
         self.mutpb = kwargs.get('mutpb', 0.2)
 
-        self.logbook = tools.Logbook()
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
-        stats.register("avg", np.mean)
-        stats.register("std", np.std)
-        stats.register("min", min)
-        self.stats = stats
+        # Reset stats and logging
+        self.reset()
 
 
     def _random_boolean(self, zero_to_one_ratio):
@@ -123,10 +119,6 @@ class Generator:
             # logger.logHeader()
             # logger.logGeneration(evals=len(population), gen=0, stats=stats)
 
-        # Store best individual in each generation, and associated measure
-        self.best_individuals = []
-        self.best_measures = []
-
         # Begin the generational process
         for gen in range(0, ngen):
 
@@ -150,11 +142,13 @@ class Generator:
             self.best_individuals.append(population[0])
             best_abb = AbbreviatedMeasure(self.measure, population[0], self.abbreviator, self.evaluator, stats=True) 
             self.best_measures.append(best_abb)
+            r_squared = np.round(best_abb.r_squared.mean(), 2)
+            n_items = np.sum(population[0])
 
             # Update the statistics with the new population
             if self.stats is not None:
                 record = self.stats.compile(population)
-                self.logbook.record(gen=gen, evals=len(population), **record)
+                self.logbook.record(gen=gen, r_squared=r_squared, n_items=n_items, **record)
 
             # if verbose:
                 # logger.logGeneration(evals=len(invalid_ind), gen=gen, stats=stats)
@@ -169,6 +163,20 @@ class Generator:
     def save(self):
         ''' Save results of abbreviation. '''
         pass
+
+
+    def reset(self):
+        ''' Reset the Generator, removing all history, logging, and stats. '''
+        self.logbook = tools.Logbook()
+        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats.register("avg", np.mean)
+        stats.register("std", np.std)
+        stats.register("min", min)
+        self.stats = stats
+
+        # Store best individual in each generation, and associated measure
+        self.best_individuals = []
+        self.best_measures = []
 
 
     def plot_history(self, **kwargs):

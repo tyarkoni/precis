@@ -175,8 +175,8 @@ def history(generator, **kwargs):
     ''' Plot evolution of best measure across generations:
     total cost, r-squared, number of items.
     '''
-    mean_rsq = [np.mean(m.r_squared) for m in generator.best_measures]
-    n_items = [m.n_X for m in generator.best_measures]
+    mean_rsq = generator.logbook.select('r_squared')
+    n_items = generator.logbook.select('n_items')
     cost = generator.logbook.select('min')
     plt.subplot(131)
     plt.plot(mean_rsq)
