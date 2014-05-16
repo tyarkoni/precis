@@ -48,13 +48,17 @@ class Generator:
         return random.random() < zero_to_one_ratio
 
 
-    def run(self, measure, n_gens=100, seed=None, **kwargs):
+    def run(self, measure, n_gens=100, seed=None, resume=True, **kwargs):
         ''' Main abbreviated measure generation function.
 
         Args:
             measure: A Measure instance to abbreviate
             n_gens: Number of generations to run GA for
             seed: Optional integer to use as random seed
+            resume: If True, AND the measure passed is the same as the one already 
+                stored, AND the Generator has been run before, then pick up where 
+                we left off--i.e., start with the last population produced instead 
+                of initializing a new one.
             kwargs: Additional keywords to pass on to the evaluation method
                 of the current LossFunction class.
 
@@ -79,9 +83,6 @@ class Generator:
         toolbox.register("mutate", tools.mutFlipBit, indpb=self.indpb)
         toolbox.register("select", tools.selTournament, tournsize=self.tourn_size)
 
-        # Initialize population
-        pop = toolbox.population(n=self.pop_size)
-
         self.measure = measure
         self.evaluation_keywords = kwargs
 
@@ -94,8 +95,16 @@ class Generator:
             self.test_measure = copy.deepcopy(self.measure)
             self.measure.select_subjects(self.train_subs)
             self.test_measure.select_subjects(self.test_subs)
+
+        # Initialize population or pick up where we left off.
+        if resume and self.measure == measure and hasattr(self, 'pop'):
+            pop = self.pop
+        else:
+            self.reset()
+            pop = toolbox.population(n=self.pop_size)
+
         
-        self.evolve(pop, toolbox, n_gens, cxpb=self.cxpb, mutpb=self.mutpb)
+        self._evolve(measure, pop, toolbox, n_gens, cxpb=self.cxpb, mutpb=self.mutpb)
         final_items = self.best_individuals[-1]
 
         # If cross-validation was used, activate the hold-out subjects
@@ -104,7 +113,7 @@ class Generator:
         return self.best
 
 
-    def evolve(self, population, toolbox, ngen, cxpb, mutpb, verbose=True):
+    def _evolve(self, measure, population, toolbox, ngen, cxpb, mutpb, verbose=True):
         ''' Main evolution algorithm. A tweaked version of the eaSimple algorithm included in 
         the DEAP package that adds per-generation logging of the best individual's properties
         and drops all the Statistics/HallOfFame stuff (since we're handling that ourselves).
@@ -150,6 +159,8 @@ class Generator:
                 record = self.stats.compile(population)
                 self.logbook.record(gen=gen, r_squared=r_squared, n_items=n_items, **record)
 
+        # Save last population in case we want to resume
+        self.pop = population
             # if verbose:
                 # logger.logGeneration(evals=len(invalid_ind), gen=gen, stats=stats)
 
