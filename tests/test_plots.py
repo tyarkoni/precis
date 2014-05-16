@@ -4,7 +4,7 @@ import numpy as np
 from scythe.generate import Generator
 from scythe.base import Measure
 from scythe import abbreviate
-from scythe import plot as gp
+from scythe import plot as sp
 import matplotlib.pyplot as plt
 from helpers import get_test_data_path as tdp
 from os.path import join
@@ -20,11 +20,11 @@ class TestBase(unittest.TestCase):
         am = gen.run(measure, n_gens=3)
         cls.generator = gen
 
-    def x_test_scale_intercorrelation_plot(self):
-        gp.scale_intercorrelation_plot(self.generator.best)
+    def test_scale_intercorrelation_plot(self):
+        sp.scale_correlation_matrix(self.generator.best)
     
     def test_evolution_plot(self):
-        gp.evolution_plot(self.generator)
+        sp.history(self.generator)
 
 if __name__ == '__main__':
     unittest.main()

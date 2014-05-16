@@ -90,7 +90,7 @@ class TestBase(unittest.TestCase):
         self.assertTrue(exists(t + '/summary.txt'))
         shutil.rmtree(t)
 
-    def x_test_abbreviator(self):
+    def test_abbreviator(self):
         measure = Measure(X=join(tdp(), 'items.txt'), y=join(tdp(), 'scales.txt'), key=join(tdp(), 'key.txt'), missing='drop')
         gen = Generator()
         am = gen.run(measure, n_gens=3)
