@@ -122,10 +122,15 @@ class Dataset(object):
         self.n_y = self.y.shape[1]
 
 
-    def score(self, key, columns=None):
+    def score(self, key, columns=None, rescale=True):
         if isinstance(key, basestring):
             key = pd.read_csv(key, sep='\t', header=None).values
         y = np.dot(self.X, key)
+        if rescale:
+            n_reverse = np.sum(key==-1, axis=0)
+            max_val = self.X.values.max()
+            inc = n_reverse * (max_val + 1)
+            y += inc
         if columns is None:
             columns = self.y.columns if self.y is not None else range(y.shape[1])
         self.y = pd.DataFrame(y, columns=columns)
@@ -229,18 +234,20 @@ class Measure(object):
         self.key = key
 
 
-    def score(self, key=None, columns=None):
+    def score(self, key=None, columns=None, rescale=True):
         ''' Compute y scores from X data and scoring key. Note: will overwrite any
         existing y data. 
         Args:
             key: Optional key to use. If passed, replaces any existing key.
             columns: Optional list of column names for the key.
+            rescale: If True, adjusts the total y scores to account for the presence 
+                of reverse-keyed items.
         '''
         if key is not None:
             self.set_key(key)
         if self.key is None:
             raise ValueError("No key found in current measure; can't generate scores!")
-        self.dataset.score(self.key, columns)
+        self.dataset.score(self.key, columns, rescale)
 
 
     def compute_stats(self):
