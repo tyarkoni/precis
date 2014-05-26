@@ -17,10 +17,11 @@ class TestBase(unittest.TestCase):
         measure = Measure(X=join(tdp(), 'items.txt'), y=join(tdp(), 'scales.txt'), key=join(tdp(), 'key.txt'), missing='drop')
         abb = abbreviate.TopNAbbreviator(max_items=8, min_r=0.3)
         gen = Generator(abbreviator=abb)
-        am = gen.run(measure, n_gens=3)
+        gen.run(measure, n_gens=3)
         cls.generator = gen
 
     def test_scale_intercorrelation_plot(self):
+        am = self.generator.abbreviate()
         sp.scale_correlation_matrix(self.generator.best)
     
     def test_evolution_plot(self):

@@ -43,13 +43,17 @@ class TestBase(unittest.TestCase):
         self.assertEqual(len(dataset.X), 90)
 
     def test_dataset_select_items(self):
+        # Select with reindexed item labels
         dataset = Dataset(self.X, self.y)
-        # by column name
-        dataset.select_X(['i1', 'i2'])
-        self.assertEqual(list(dataset.X.columns), ['i1', 'i2'])
         # by index
-        dataset = Dataset(self.X, self.y)
-        dataset.select_X([0, 3])
+        dataset.select_X([0, 1])
+        self.assertEqual(list(dataset.X.columns), ['1', '2'])
+        # by name
+        dataset.select_X(['1', '2'])
+        self.assertEqual(list(dataset.X.columns), ['1', '2'])        
+        # Select with original labels
+        dataset = Dataset(self.X, self.y, keep_labels=True)
+        dataset.select_X(['i1', 'i4'])
         self.assertEqual(list(dataset.X.columns), ['i1', 'i4'])
 
     def test_dataset_reverse_items(self):
