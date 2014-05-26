@@ -105,11 +105,15 @@ class Generator:
 
         
         self._evolve(measure, pop, toolbox, n_gens, cxpb=self.cxpb, mutpb=self.mutpb)
-        final_items = self.best_individuals[-1]
 
+
+    def abbreviate(self, trim=False, stats=True, keep_original_labels=False):
+
+        final_items = self.best_individuals[-1]
         # If cross-validation was used, activate the hold-out subjects
         measure = self.test_measure if self.cross_val else self.measure
-        self.best = AbbreviatedMeasure(measure, final_items, self.abbreviator, self.evaluator, stats=True)    
+        self.best = AbbreviatedMeasure(measure, final_items, self.abbreviator, 
+            self.evaluator, trim=trim, stats=stats, keep_original_labels=keep_original_labels)    
         return self.best
 
 
