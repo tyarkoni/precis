@@ -12,7 +12,22 @@ def adjust_figure(fig=None, **kwargs):
 
 
 def composite(generator, panels, measure=None, rows=1, cols=None, **kwargs):
-    ''' Plot a composite figure made up of a list of panels. '''
+    ''' Plot a composite figure made up of a list of panels. 
+    Args:
+        generator: the Generator instance containing the data to extract.
+        panels: A list of strings specifying the figure panels. Can be:
+            'history': Calls the history() plotting function.
+            'corr-*': Calls the scale_correlation_matrix() plotting function. 
+                The second part of the string is passed on as the corr_with 
+                argument (e.g., 'corr-cross' will pass 'cross' on).
+        measure: Optional Measure instance to pass on to other plotting functions.
+        rows: Number of rows in figure. Defaults to single row.
+        cols: Optional number of columns. If None, will determine cols based 
+            on the number of panels and rows.
+        kwargs: Optional keywords to pass on to adjust_figure()
+    Returns:
+        The current matplotlib Figure instance.
+    '''
 
     if measure is None:
         measure = generator.best
@@ -26,13 +41,14 @@ def composite(generator, panels, measure=None, rows=1, cols=None, **kwargs):
     for i, p in enumerate(panels):
         plt.subplot(rows, cols, i+1)
 
-        if p.startswith('stat'):
+        if p.startswith('hist'):
             history(generator)
 
         elif p.startswith('corr'):
             scale_correlation_matrix(measure, corr_with=p.split('-')[-1])
 
     adjust_figure(**kwargs)
+    return fig
 
 
 def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=False, 
@@ -49,6 +65,8 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
         trend: Whether or not to plot the regression line.
         text: Whether or not to plot the r-squared text label.
         totals: If true, adds a subplot for the total score across all scales.
+    Returns:
+        The current Figure instance.
     '''
 
     if not hasattr(measure, 'predicted_y'):
@@ -98,17 +116,19 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
 
     plt.subplots_adjust(left=0.07, right=0.95, top=0.95, bottom=0.07, hspace=0.4, wspace=0.3)
     adjust_figure(**kwargs)
+    return plt.gcf()
 
 
 def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
     ''' Plot the correlation matrix between scales. 
     Args:
         corr_with: Which sets of variables to correlate.
-            'observed': Plots intercorrelations between observed (i.e., real) scores
+            'original': Plots intercorrelations between original (i.e., real) scores
             'predicted': Plots intercorrelations between predicted scores.
-            'cross': Plots correlations between observed and predicted scores.
+            'cross': Plots correlations between original and predicted scores.
         text: Boolean indicating whether to display the actual correlation values
             on the matrix.
+    Returns: the current Axis instance.
     '''
 
     if not hasattr(measure, 'predicted_y'):
@@ -120,7 +140,7 @@ def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
         xlab = 'Abbreviated scale'
         ylab = 'Original scale'
         title = 'Intercorrelations between original and abbreviated scales'
-    elif corr_with == 'observed':
+    elif corr_with == 'original':
         data = np.corrcoef(measure.dataset.y.T)
         xlab = ylab = 'Original scale'
         title = 'Intercorrelations between original scales'
@@ -169,11 +189,13 @@ def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
     cbar = plt.colorbar()
     cbar.ax.tick_params(labelsize=12)
     adjust_figure(**kwargs)
+    return ax
 
 
 def history(generator, **kwargs):
     ''' Plot evolution of best measure across generations:
     total cost, r-squared, number of items.
+    Returns: The current Figure instance.
     '''
     mean_rsq = generator.logbook.select('r_squared')
     n_items = generator.logbook.select('n_items')
@@ -191,4 +213,5 @@ def history(generator, **kwargs):
     plt.ylabel('Cost')
     plt.xlabel('Generation')
     adjust_figure(**kwargs)
+    return plt.gcf()
 
