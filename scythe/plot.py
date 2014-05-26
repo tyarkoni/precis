@@ -75,10 +75,12 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
     if cols is None:
         cols = measure.n_y/rows
 
+    fig, axes = plt.subplots(rows, cols)
+
     # Variables we'll need
     abbreviated_y = measure.predicted_y
     original_y = measure.y.values
-    names = list(measure.y_names)
+    names = list(measure.y_labels)
     r_squared = list(measure.r_squared)
 
     # Add a column for total score, summing up all scales
@@ -90,8 +92,7 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
 
     n_points = len(abbreviated_y)
     for i in range(abbreviated_y.shape[1]):
-        plt.subplot(rows, cols, i+1)
-        ax = plt.gca()
+        ax = axes[i/cols, i%cols]
         x = abbreviated_y[:,i] + np.random.uniform(-jitter, jitter, n_points)
         y = original_y[:,i] + np.random.uniform(-jitter, jitter, n_points)
         plt.scatter(x, y, s=12, color='black', alpha=alpha)
@@ -116,7 +117,7 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
 
     plt.subplots_adjust(left=0.07, right=0.95, top=0.95, bottom=0.07, hspace=0.4, wspace=0.3)
     adjust_figure(**kwargs)
-    return plt.gcf()
+    return fig
 
 
 def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
@@ -158,7 +159,6 @@ def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
     ax.set_yticks(np.arange(data.shape[1])+0.5, minor=False)
 
     # Add title and axis labels
-    # plt.title(title)
     plt.xlabel(xlab, size=16)
     plt.ylabel(ylab, size=16)
 
@@ -173,7 +173,7 @@ def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
     ax.xaxis.tick_top()
     ax.yaxis.tick_left()
 
-    scale_names = list(measure.dataset.y_names)
+    scale_names = list(measure.dataset.y_labels)
     ax.set_xticklabels(scale_names, minor=False)
     ax.set_yticklabels(scale_names, minor=False)
 
@@ -200,7 +200,7 @@ def history(generator, **kwargs):
     mean_rsq = generator.logbook.select('r_squared')
     n_items = generator.logbook.select('n_items')
     cost = generator.logbook.select('min')
-    plt.subplot(131)
+    ax = plt.subplot(131)
     plt.plot(mean_rsq)
     plt.ylabel('Mean R^2')
     plt.xlabel('Generation')
@@ -213,5 +213,12 @@ def history(generator, **kwargs):
     plt.ylabel('Cost')
     plt.xlabel('Generation')
     adjust_figure(**kwargs)
-    return plt.gcf()
+    return ax
+
+
+
+
+
+
+
 
