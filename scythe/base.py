@@ -17,7 +17,8 @@ class Dataset(object):
     """ Represents X/y data for Measure training and application, plus some 
     additional helper methods. Mostly just wraps pandas. """
 
-    def __init__(self, X, y=None, sep='\t', missing=None, select_X=None, select_y=None):
+    def __init__(self, X, y=None, sep='\t', missing=None, select_X=None, select_y=None,
+                keep_labels=False):
         """
         Args:
             X: The item data. Either the name of a text file containing item scores,
@@ -30,6 +31,9 @@ class Dataset(object):
             select_X: An optional list of columns to keep in X (discards the rest).
                 Useful when computing measure stats for a previously abbreviated measures.
             select_y: Optional list of columns to keep in y.
+            keep_labels: When False, all items in X will be relabeled sequentially 
+                starting with 1. When True, the original labels in the pandas DataFrame 
+                will be kept.
         """
         # Read in data
         if isinstance(X, basestring):
@@ -38,6 +42,8 @@ class Dataset(object):
                 X = X.drop('sample', axis=1)
             except:
                 pass
+        elif not hasattr(X, 'columns'):
+            X = pd.DataFrame(X)
 
         if y is not None and isinstance(y, basestring):
             y = pd.read_csv(y, sep=sep).convert_objects(convert_numeric=True)
@@ -50,14 +56,16 @@ class Dataset(object):
         # Store item and scale counts
         self.n_X = self.X.shape[1]
 
+        self._set_X_labels(keep_labels)
+
         if select_X is not None:
-            self.select_X(select_X)
+            self.select_X(select_X, keep_labels)
 
         if y is not None:
             if hasattr(y, 'columns'):
-                self.y_names = self.y.columns
+                self.y_labels = self.y.columns
             else:
-                self.y_names = range(y.shape[1])
+                self.y_labels = range(y.shape[1])
             if select_y is not None:
                 self.select_y(select_y)
             self.n_y = self.y.shape[1]
@@ -108,10 +116,21 @@ class Dataset(object):
         self.n_subjects = len(self.X)
 
 
-    def select_X(self, cols):
+    def select_X(self, cols, keep_labels=True):
         ''' Trims X to only the specified items. '''
         self.X = self.X.ix[:,cols]
         self.n_X = self.X.shape[1]
+        self._set_X_labels(keep_labels=keep_labels)
+
+
+    def _set_X_labels(self, keep_labels=False):
+        if not keep_labels:
+            self.X.columns = [str(i+1) for i in range(self.n_X)]
+
+
+    @property
+    def X_labels(self):
+        return self.X.columns
 
 
     def select_y(self, cols):
@@ -135,7 +154,7 @@ class Dataset(object):
             columns = self.y.columns if self.y is not None else range(y.shape[1])
         self.y = pd.DataFrame(y, columns=columns)
         self.n_y = self.y.shape[1]
-        self.y_names = self.y.columns
+        self.y_labels = self.y.columns
 
 
     def trim(self, subjects=None, items=None, key_only=True):
@@ -289,17 +308,18 @@ class Measure(object):
 
         # Human-readable scoring key
         if self.key is not None:
+
             output.append('\nScoring key:')
-            names = self.dataset.y_names
-            item_labs = range(len(self.key))
+
+            names = self.dataset.y_labels
+            item_labels = self.dataset.X_labels
 
             for s in range(self.n_y):
                 item_list = []
                 items_used = np.where(self.key[:,s] != 0)[0]
                 for i, v in enumerate(items_used):
-                    item = str(item_labs[v] + 1)
+                    item = item_labels[v]
                     if self.key[v,s] < 0: item += 'R'
-                    # item = '%dR' % (old_num+1) if self.key[i,s] < 0 else str(old_num+1)
                     item_list.append(item)
                 output.append('%s (%d items, R^2=%.2f, alpha=%.2f):\t%s' % 
                     (names[s], self.n_items_per_scale[s], self.r_squared[s], 
@@ -359,7 +379,8 @@ class AbbreviatedMeasure(object):
     """ A wrapper for the Measure class that stores both the original, unaltered 
     Measure, and an abbreviated copy. """
 
-    def __init__(self, measure, select, abbreviator, evaluator=None, stats=True, trim=False):
+    def __init__(self, measure, select, abbreviator, evaluator=None, stats=True, trim=False,
+                keep_original_labels=True):
         """ AbbreviatedMeasure initializer.
         Args:
             measure: a Measure instance representing the original measure
@@ -369,6 +390,11 @@ class AbbreviatedMeasure(object):
             evaluator: optional Evaluator instance to associate with the AbbreviatedMeasure
             stats: if True, computes stats on the new AbbreviatedMeasures post-initialization
             trim: optional argument passed along to Measure initializer.
+            keep_original_labels: when True, the printed scoring key for the AbbreviatedMeasure
+                will number items according to the original measure rather than the 
+                abbreviated version. E.g., if abbreviated items 1, 2, and 3 correspond to 
+                original items 1, 4, and 8, scoring keys will show the latter when printed.
+                When False, indices within the abbreviated measure's key will be printed.
         """
         self.original = measure
         self.abbreviator = abbreviator
@@ -376,9 +402,11 @@ class AbbreviatedMeasure(object):
         self.abbreviator.abbreviate(measure, select)
         key = self.abbreviator.key
         dataset = copy.deepcopy(measure.dataset)
-        dataset.select_X(select)
-        self.original_items = np.where(select)[0]
+        sel_inds = np.where(select)[0]
+        self.original_items = [dataset.X_labels[i] for i in sel_inds]
+        dataset.select_X(select, keep_labels=keep_original_labels)
         self.abbreviated = Measure(dataset, key=key, trim=trim)
+
         if stats:
             self.compute_stats()
 
@@ -394,6 +422,6 @@ class AbbreviatedMeasure(object):
         """ Returns the string representation of the abbreviated Measure instance, prepended
         with a few details about the abbreviation process. """
         orig = str(self.abbreviated)
-        orig += "\n\nOriginal measure items kept: " + ', '.join([str(x+1) for x in self.original_items])
+        orig += "\n\nOriginal measure items kept: " + ', '.join([x for x in self.original_items])
         return orig
         
