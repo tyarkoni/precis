@@ -359,7 +359,17 @@ class AbbreviatedMeasure(object):
     """ A wrapper for the Measure class that stores both the original, unaltered 
     Measure, and an abbreviated copy. """
 
-    def __init__(self, measure, select, abbreviator=None, evaluator=None, stats=True, trim=False):
+    def __init__(self, measure, select, abbreviator, evaluator=None, stats=True, trim=False):
+        """ AbbreviatedMeasure initializer.
+        Args:
+            measure: a Measure instance representing the original measure
+            select: a list of item indices in the original measure to be retained in 
+                the abbreviation
+            abbreviator: the Abbreviator instance that produced the Measure
+            evaluator: optional Evaluator instance to associate with the AbbreviatedMeasure
+            stats: if True, computes stats on the new AbbreviatedMeasures post-initialization
+            trim: optional argument passed along to Measure initializer.
+        """
         self.original = measure
         self.abbreviator = abbreviator
         self.evaluator = evaluator
@@ -372,10 +382,17 @@ class AbbreviatedMeasure(object):
         if stats:
             self.compute_stats()
 
+
     def __getattr__(self, attr):
+        """ Wrapper around the stored abbreviated Measure; ensures that by default, any 
+            attribute request not explicitly defined in AbbreviatedMeasure will be passed on 
+            to the Measure class. """
         return getattr(self.abbreviated, attr)
 
+
     def __str__(self):
+        """ Returns the string representation of the abbreviated Measure instance, prepended
+        with a few details about the abbreviation process. """
         orig = str(self.abbreviated)
         orig += "\n\nOriginal measure items kept: " + ', '.join([str(x+1) for x in self.original_items])
         return orig
