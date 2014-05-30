@@ -25,8 +25,6 @@ def composite(generator, panels, measure=None, rows=1, cols=None, **kwargs):
         cols: Optional number of columns. If None, will determine cols based 
             on the number of panels and rows.
         kwargs: Optional keywords to pass on to adjust_figure()
-    Returns:
-        The current matplotlib Figure instance.
     '''
 
     if measure is None:
@@ -39,16 +37,15 @@ def composite(generator, panels, measure=None, rows=1, cols=None, **kwargs):
     fig = plt.figure(1)
 
     for i, p in enumerate(panels):
-        plt.subplot(rows, cols, i+1)
+        ax = plt.subplot(rows, cols, i+1)
 
         if p.startswith('hist'):
             history(generator)
 
         elif p.startswith('corr'):
-            scale_correlation_matrix(measure, corr_with=p.split('-')[-1])
+            scale_correlation_matrix(measure, corr_with=p.split('-')[-1], ax=ax)
 
-    adjust_figure(**kwargs)
-    return fig
+    adjust_figure(fig, **kwargs)
 
 
 def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=False, 
@@ -80,7 +77,7 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
     # Variables we'll need
     abbreviated_y = measure.predicted_y
     original_y = measure.y.values
-    names = list(measure.y_labels)
+    names = list(measure.dataset.y_labels)
     r_squared = list(measure.r_squared)
 
     # Add a column for total score, summing up all scales
@@ -93,6 +90,7 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
     n_points = len(abbreviated_y)
     for i in range(abbreviated_y.shape[1]):
         ax = axes[i/cols, i%cols]
+        plt.sca(ax)
         x = abbreviated_y[:,i] + np.random.uniform(-jitter, jitter, n_points)
         y = original_y[:,i] + np.random.uniform(-jitter, jitter, n_points)
         plt.scatter(x, y, s=12, color='black', alpha=alpha)
@@ -117,10 +115,9 @@ def scale_scatter_plot(measure, rows=1, cols=None, jitter=0.0, alpha=0.3, trend=
 
     plt.subplots_adjust(left=0.07, right=0.95, top=0.95, bottom=0.07, hspace=0.4, wspace=0.3)
     adjust_figure(**kwargs)
-    return fig
 
 
-def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
+def scale_correlation_matrix(measure, corr_with='cross', text=True, ax=None, **kwargs):
     ''' Plot the correlation matrix between scales. 
     Args:
         corr_with: Which sets of variables to correlate.
@@ -129,6 +126,7 @@ def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
             'cross': Plots correlations between original and predicted scores.
         text: Boolean indicating whether to display the actual correlation values
             on the matrix.
+        ax: Axis to plot on.
     Returns: the current Axis instance.
     '''
 
@@ -150,6 +148,9 @@ def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
         xlab = ylab = 'Abbreviated scale'
         title = 'Intercorrelations between abbreviated scales'
 
+    if ax is None:
+        ax = plt.gca()
+
     # Make heatmap
     plt.pcolor(data, cmap='RdYlBu_r', vmin=-1, vmax=1, edgecolors='black')
 
@@ -159,11 +160,11 @@ def scale_correlation_matrix(measure, corr_with='cross', text=True, **kwargs):
     ax.set_yticks(np.arange(data.shape[1])+0.5, minor=False)
 
     # Add title and axis labels
-    plt.xlabel(xlab, size=16)
-    plt.ylabel(ylab, size=16)
+    ax.set_xlabel(xlab, size=16)
+    ax.set_ylabel(ylab, size=16)
 
     # Bump title slightly
-    t = plt.title(title, size=20) 
+    t = ax.set_title(title, size=20) 
     t.set_y(1.05)
     plt.subplots_adjust(left=0.08, right=0.92)
 
