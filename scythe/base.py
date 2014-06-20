@@ -124,6 +124,7 @@ class Dataset(object):
 
 
     def _set_X_labels(self, keep_labels=False):
+        ''' Number X labels from 0. '''
         if not keep_labels:
             self.X.columns = [str(i+1) for i in range(self.n_X)]
 
@@ -134,7 +135,7 @@ class Dataset(object):
 
 
     def select_y(self, cols):
-        ''' Trims X to only the specified items. '''
+        ''' Trims y to only the specified items. '''
         if self.y is None:
             raise ValueError("No y array found in measure; nothing to select from!")
         self.y = self.y.ix[:,cols]
@@ -142,6 +143,15 @@ class Dataset(object):
 
 
     def score(self, key, columns=None, rescale=True):
+        ''' Compute y scores from X data and scoring key. Note: will overwrite any
+        existing y data. 
+        Args:
+            key: The scoring key to use. Either a string giving the filename of the 
+                scoring key, or a pandas DataFrame.
+            columns: Optional list of column names for the key.
+            rescale: If True, adjusts the total y scores to account for the presence 
+                of reverse-keyed items.
+        '''
         if isinstance(key, basestring):
             key = pd.read_csv(key, sep='\t', header=None).values
         y = np.dot(self.X, key)
@@ -200,7 +210,8 @@ class Measure(object):
             dataset: Optional dataset to initialize with.
             X: Optional item data to pass to Dataset initializer.
             y: Optional scale scores to pass to Dataset initializer.
-            key: An optional text file providing the scoring key (items x scales).
+            key: An optional scoring key (items x scales)--either the name of a text file,
+                or a numpy array or pandas DataFrame.
             trim: When True, drops all X/y columns not used in scoring key.
             kwargs: Additional keyword arguments to pass on to the Dataset initializer.
         '''
@@ -242,7 +253,7 @@ class Measure(object):
     def set_key(self, key):
         """ Set the current scoring key. 
         Args:
-            key: either a numpy array or the filename of a scoring key.
+            key: a numpy array, pandas DataFrame, or the filename of a scoring key.
                 Key format is items in rows, scales in columns, with no index or 
                 header.
         """
@@ -379,14 +390,18 @@ class AbbreviatedMeasure(object):
     """ A wrapper for the Measure class that stores both the original, unaltered 
     Measure, and an abbreviated copy. """
 
-    def __init__(self, measure, select, abbreviator, evaluator=None, stats=True, trim=False,
+    def __init__(self, measure, select, key=None, abbreviator=None, evaluator=None, stats=True, trim=False,
                 keep_original_labels=True):
-        """ AbbreviatedMeasure initializer.
+        """ AbbreviatedMeasure initializer. Takes a Measure instance and abbreviates it using 
+        either a scoring key (key) or an Abbreviator instance (abbreviator).
         Args:
             measure: a Measure instance representing the original measure
             select: a list of item indices in the original measure to be retained in 
                 the abbreviation
-            abbreviator: the Abbreviator instance that produced the Measure
+            key: Optional key to use in the abbreviation. If None, the abbreviator argument 
+                must be provided.
+            abbreviator: an optional Abbreviator instance to use in the abbreviation process.
+                If None, the key argument must be provided.
             evaluator: optional Evaluator instance to associate with the AbbreviatedMeasure
             stats: if True, computes stats on the new AbbreviatedMeasures post-initialization
             trim: optional argument passed along to Measure initializer.
@@ -399,8 +414,13 @@ class AbbreviatedMeasure(object):
         self.original = measure
         self.abbreviator = abbreviator
         self.evaluator = evaluator
-        self.abbreviator.abbreviate(measure, select)
-        key = self.abbreviator.key
+
+        if self.abbreviator is not None:
+            self.abbreviator.abbreviate(measure, select)
+            key = self.abbreviator.key
+        elif key is None:
+            raise ValueError("Either a key or an abbreviator must be provided.")
+            
         dataset = copy.deepcopy(measure.dataset)
         sel_inds = np.where(select)[0]
         self.original_items = [dataset.X_labels[i] for i in sel_inds]
@@ -419,7 +439,7 @@ class AbbreviatedMeasure(object):
 
 
     def __str__(self):
-        """ Returns the string representation of the abbreviated Measure instance, prepended
+        """ Returns the string representation of the abbreviated Measure instance, appended
         with a few details about the abbreviation process. """
         orig = str(self.abbreviated)
         orig += "\n\nOriginal measure items kept: " + ', '.join([x for x in self.original_items])
