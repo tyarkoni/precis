@@ -4,3 +4,5 @@
 build/
 dist
 dist/*
+*-checkpoint.ipynb
+.ipynb_checkpoints/
