@@ -1,0 +1,13 @@
+Number of items: 27
+Number of scales: 8
+Number of subjects: 1590
+
+Scoring key:
+B (3 items, R^2=0.76, alpha=0.59):	2, 17R, 20
+Ca (7 items, R^2=0.59, alpha=0.56):	4R, 15R, 16R, 17R, 22R, 23R, 26
+Co (7 items, R^2=0.76, alpha=0.61):	1R, 4R, 12R, 16R, 17R, 18R, 24
+F (7 items, R^2=0.68, alpha=0.61):	6, 7R, 11R, 21R, 25, 26, 27
+M (7 items, R^2=0.63, alpha=0.58):	6, 10, 13, 16R, 24, 25, 27
+R (5 items, R^2=0.71, alpha=0.64):	6, 9, 25, 26, 27
+So (7 items, R^2=0.67, alpha=0.60):	3R, 5, 13, 14, 17, 21R, 25
+St (7 items, R^2=0.74, alpha=0.60):	1R, 7R, 8R, 12R, 17, 19, 21R
