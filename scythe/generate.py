@@ -48,7 +48,7 @@ class Generator:
         return random.random() < zero_to_one_ratio
 
 
-    def run(self, measure, n_gens=100, seed=None, resume=True, **kwargs):
+    def run(self, measure, n_gens=100, seed=None, resume=False, **kwargs):
         ''' Main abbreviated measure generation function.
 
         Args:
@@ -107,13 +107,14 @@ class Generator:
         self._evolve(measure, pop, toolbox, n_gens, cxpb=self.cxpb, mutpb=self.mutpb)
 
 
-    def abbreviate(self, trim=False, stats=True, keep_original_labels=False):
+    def abbreviate(self, trim=False, stats=True, keep_original_labels=True):
 
         final_items = self.best_individuals[-1]
         # If cross-validation was used, activate the hold-out subjects
         measure = self.test_measure if self.cross_val else self.measure
-        self.best = AbbreviatedMeasure(measure, final_items, self.abbreviator, 
-            self.evaluator, trim=trim, stats=stats, keep_original_labels=keep_original_labels)    
+        self.best = AbbreviatedMeasure(measure, final_items, abbreviator=self.abbreviator, 
+            evaluator=self.evaluator, trim=trim, stats=stats, 
+            keep_original_labels=keep_original_labels)    
         return self.best
 
 
@@ -153,7 +154,7 @@ class Generator:
 
             # Save best individual as an AbbreviatedMeasure
             self.best_individuals.append(population[0])
-            best_abb = AbbreviatedMeasure(self.measure, population[0], self.abbreviator, self.evaluator, stats=True) 
+            best_abb = AbbreviatedMeasure(self.measure, population[0], abbreviator=self.abbreviator, evaluator=self.evaluator, stats=True) 
             self.best_measures.append(best_abb)
             r_squared = np.round(best_abb.r_squared.mean(), 2)
             n_items = np.sum(population[0])
