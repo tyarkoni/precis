@@ -11,7 +11,7 @@ Alternatively, for the latest (development) version, install directly from githu
 pip install git+https://github.com/tyarkoni/scythe.git
 ```
 #### Dependencies
-Aside from standard scientific python packages (numpy, matplotlib, and pandas--all conveniently included in the [Anaconda](http://???) bundle), the only current dependency is [deap](https://github.com/DEAP/deap/), which can be installed from PyPI ("pip install deap").
+Aside from standard scientific python packages (numpy, matplotlib, and pandas--all conveniently included in the [Anaconda](https://store.continuum.io/cshop/anaconda/) bundle), the only current dependency is [deap](https://github.com/DEAP/deap/), which can be installed from PyPI ("pip install deap").
 
 ## Quickstart
 This example reproduces the core results in [Eisenbarth, Lilienfeld, & Yarkoni (2014)](http://pilab.psy.utexas.edu/publications/Eisenbarth_Psychological_Assessment_2014.pdf). For a more comprehensive and detailed walk-through, including generation of all the figures in the manuscript, see the [demo IPython notebook](https://github.com/tyarkoni/scythe/master/examples/PPI-R/PPI-R%20abbreviation.ipynb), which can be [rendered online](https://github.com/tyarkoni/scythe/blob/master/examples/PPI-R/PPI-R%20abbreviation.ipynb). All data needed to run the example below can be found in [examples/PPI-R/data](https://github.com/tyarkoni/scythe/tree/master/examples/PPI-R/data).
