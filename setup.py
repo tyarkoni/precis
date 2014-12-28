@@ -29,5 +29,6 @@ setup(name="scythe",
       package_data={'scythe': ['data/*'],
                     'scythe.tests': ['data/*']
                     },
+    download_url='https://github.com/tyarkoni/scythe/archive/%s.tar.gz' % __version__,
       **extra_setuptools_args
       )

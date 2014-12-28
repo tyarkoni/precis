@@ -6,3 +6,4 @@ dist
 dist/*
 *-checkpoint.ipynb
 .ipynb_checkpoints/
+setup.cfg
