@@ -8,6 +8,10 @@ __all__ = ["abbreviate", "base", "evaluate", "generate", "plot", "stats", "set_l
 import logging
 import sys
 import os
+from base import Dataset, Measure, AbbreviatedMeasure
+from abbreviate import Abbreviator
+from evaluate import Evaluator
+from generate import Generator
 
 from version import __version__
 
