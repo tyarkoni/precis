@@ -1,6 +1,6 @@
 import os
 import sys
-from distutils.core import setup
+from setuptools import setup
 
 # For some commands, use setuptools
 if len(set(('test', 'easy_install')).intersection(sys.argv)) > 0:
@@ -19,11 +19,11 @@ if 'setuptools' in sys.modules:
 with open(os.path.join('scythe', 'version.py')) as f:
     exec(f.read())
 
-setup(name="scythe",
+setup(name="pyscythe",
       version=__version__,
       description="Genetic algorithm-based measure abbreviation in Python.",
-      maintainer='Tal Yarkoni',
-      maintainer_email='tyarkoni@gmail.com',
+      author='Tal Yarkoni',
+      author_email='tyarkoni@gmail.com',
       url='http://github.com/tyarkoni/scythe',
       packages=["scythe"],
       package_data={'scythe': ['data/*'],

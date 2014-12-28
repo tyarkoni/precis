@@ -2,9 +2,9 @@
 Automated questionnaire abbreviation in Python, as introduced and described in [Yarkoni (2010)](http://pilab.psy.utexas.edu/publications/Yarkoni_JRP_2010a.pdf). Scythe uses customizable genetic algorithms to rapidly abbreviate long questionnaire measures--often reducing their length by as much as 80 - 90% with relatively little loss of fidelity.
 
 ## Installation
-Assuming Python and pip are installed, scythe can be installed from PyPI via the command line:
+Assuming Python and pip are installed, scythe can be installed from PyPI via the command line (note the name--pyscythe, not scythe!):
 ```
-pip install scythe
+pip install pyscythe
 ```
 Alternatively, for the latest (development) version, install directly from github:
 ```
