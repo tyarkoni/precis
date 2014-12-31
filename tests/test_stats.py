@@ -1,4 +1,4 @@
-from scythe import stats as gs
+from precis import stats as gs
 import numpy as np
 import numpy.testing as npt
 import unittest

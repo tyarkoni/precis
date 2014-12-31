@@ -1,6 +1,6 @@
 import unittest
-from scythe.base import Dataset, Measure
-from scythe.generate import Generator
+from precis.base import Dataset, Measure
+from precis.generate import Generator
 import pandas as pd
 import numpy as np
 from helpers import get_test_data_path as tdp

@@ -1,10 +1,10 @@
 import unittest
 import pandas as pd
 import numpy as np
-from scythe.generate import Generator
-from scythe.base import Measure
-from scythe import abbreviate
-from scythe import plot as sp
+from precis.generate import Generator
+from precis.base import Measure
+from precis import abbreviate
+from precis import plot as sp
 import matplotlib.pyplot as plt
 from helpers import get_test_data_path as tdp
 from os.path import join
