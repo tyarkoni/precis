@@ -16,19 +16,19 @@ if 'setuptools' in sys.modules:
     )
 
 # fetch version from within module
-with open(os.path.join('scythe', 'version.py')) as f:
+with open(os.path.join('precis', 'version.py')) as f:
     exec(f.read())
 
-setup(name="pyscythe",
+setup(name="precis",
       version=__version__,
       description="Genetic algorithm-based measure abbreviation in Python.",
       author='Tal Yarkoni',
       author_email='tyarkoni@gmail.com',
-      url='http://github.com/tyarkoni/scythe',
-      packages=["scythe"],
-      package_data={'scythe': ['data/*'],
-                    'scythe.tests': ['data/*']
+      url='http://github.com/tyarkoni/precis',
+      packages=["precis"],
+      package_data={'precis': ['data/*'],
+                    'precis.tests': ['data/*']
                     },
-    download_url='https://github.com/tyarkoni/scythe/archive/%s.tar.gz' % __version__,
+    download_url='https://github.com/tyarkoni/precis/archive/%s.tar.gz' % __version__,
       **extra_setuptools_args
       )

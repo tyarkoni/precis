@@ -1,6 +1,6 @@
 # emacs: -*- mode: python-mode; py-indent-offset: 4; tab-width: 4; indent-tabs-mode: nil -*-
 # ex: set sts=4 ts=4 sw=4 et:
-""" scythe.
+""" precis.
 
 """
 __all__ = ["abbreviate", "base", "evaluate", "generate", "plot", "stats", "set_logging_level", "__version__"]
@@ -15,7 +15,7 @@ from generate import Generator
 
 from version import __version__
 
-logger = logging.getLogger("scythe")
+logger = logging.getLogger("precis")
 
 def set_logging_level(level=None):
     """Set logging level
@@ -24,10 +24,10 @@ def set_logging_level(level=None):
       level : str
         Name of the logging level (warning, error, info, etc) known
         to logging module.  If no level provided, it would get that one
-        from environment variable scythe_LOGLEVEL
+        from environment variable precis_LOGLEVEL
     """
     if level is None:
-        level = os.environ.get('scythe_LOGLEVEL', 'warn')
+        level = os.environ.get('precis_LOGLEVEL', 'warn')
     if level is not None:
         logger.setLevel(getattr(logging, level.upper()))
     return logger.getEffectiveLevel()

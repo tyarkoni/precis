@@ -4,10 +4,10 @@ from deap import algorithms, base, creator, tools
 import copy
 import logging
 import random
-from scythe import abbreviate
-from scythe import evaluate
-from scythe import plot
-from scythe.base import AbbreviatedMeasure
+from precis import abbreviate
+from precis import evaluate
+from precis import plot
+from precis.base import AbbreviatedMeasure
 
 
 class Generator:

@@ -2,7 +2,7 @@
 
 import numpy as np
 import abc
-from scythe.base import Measure
+from precis.base import Measure
 
 
 

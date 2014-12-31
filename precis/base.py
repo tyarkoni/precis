@@ -2,14 +2,14 @@
 import numpy as np
 import pandas as pd
 import logging
-from scythe import stats
-from scythe import plot
+from precis import stats
+from precis import plot
 import random
 import copy
 import os
 
 
-logger = logging.getLogger('scythe')
+logger = logging.getLogger('precis')
 
 
 class Dataset(object):

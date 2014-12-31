@@ -1,8 +1,8 @@
 import unittest
 import pandas as pd
 import numpy as np
-from scythe import evaluate, abbreviate
-from scythe.base import Dataset, Measure
+from precis import evaluate, abbreviate
+from precis.base import Dataset, Measure
 from helpers import get_test_data_path as tdp
 from os.path import join
 
