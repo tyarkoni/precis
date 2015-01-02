@@ -25,10 +25,5 @@ def cronbach_alpha(scores, key):
         alpha[i] = a
     return np.round(alpha, 3)
 
-    # # More efficient algorithm, but only works for all-positive keyed items
-    # n_items = np.sum(np.abs(key), 0).astype(float)
-    # totals = np.dot(scores, key)
-    # tot_var = np.var(totals, 0)
-    # item_var = np.var(scores, 0)
-    # sum_vars = 1 - np.divide(np.dot(item_var, key), tot_var)
-    # return np.multiply(np.divide(n_items, (n_items-1)), sum_vars)
+def spearman_brown(k, r):
+    print k*r / (1 + (k-1)*r)

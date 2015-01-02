@@ -12,16 +12,22 @@ from precis.base import AbbreviatedMeasure
 
 class Generator:
 
-    def __init__(self, abbreviator=None, evaluator=None, cross_validate=False, **kwargs):
-        '''
-        Args:
-            abbreviator: The KeyGenerator to use to generate a scoring key from the data.
-                If None, uses the top N absolute correlation approach in Yarkoni (2010).
-            evaluator: The LossFunction to minimize using the GA. If None, uses the 
-                loss function in Yarkoni (2010).
-            cross_validate: Whether or not to use split-half cross-validation.
-            kwargs: Optional arguments to pass to DEAP.
-        '''
+    '''Generates abbreviated measures.
+
+    Args:
+        abbreviator (Abbreviator): The KeyGenerator to use to generate a
+            scoring key from the data. If None, uses the top N absolute
+            correlation approach in Yarkoni (2010).
+        evaluator (Evaluator): The LossFunction to minimize using the GA. If
+            None, uses the loss function in Yarkoni (2010).
+        cross_validate (bool): Whether or not to use split-half
+            cross-validation.
+        kwargs: Optional arguments to pass to DEAP.
+    '''
+
+    def __init__(self, abbreviator=None, evaluator=None, cross_validate=False,
+                 **kwargs):
+
         self.cross_val = cross_validate
 
         if abbreviator is None:
@@ -43,24 +49,22 @@ class Generator:
         # Reset stats and logging
         self.reset()
 
-
     def _random_boolean(self, zero_to_one_ratio):
         return random.random() < zero_to_one_ratio
-
 
     def run(self, measure, n_gens=100, seed=None, resume=False, **kwargs):
         ''' Main abbreviated measure generation function.
 
         Args:
-            measure: A Measure instance to abbreviate
-            n_gens: Number of generations to run GA for
-            seed: Optional integer to use as random seed
-            resume: If True, AND the measure passed is the same as the one already 
-                stored, AND the Generator has been run before, then pick up where 
-                we left off--i.e., start with the last population produced instead 
-                of initializing a new one.
-            kwargs: Additional keywords to pass on to the evaluation method
-                of the current LossFunction class.
+            measure (Measure): A Measure instance to abbreviate
+            n_gens (int): Number of generations to run GA for
+            seed (int): Optional integer to use as random seed
+            resume (bool): If True, AND the measure passed is the same as the
+                one already stored, AND the Generator has been run before, then
+                pick up where we left off--i.e., start with the last population
+                produced instead of initializing a new one.
+            kwargs: Additional keywords to pass on to the evaluation method of
+                the current LossFunction class.
 
         Returns: A list of items included in the abbreviated measure.
         '''
@@ -74,14 +78,17 @@ class Generator:
         creator.create("Individual", list, fitness=creator.FitnessMin)
 
         toolbox = base.Toolbox()
-        toolbox.register("attr_bool", self._random_boolean, self.zero_to_one_ratio)
+        toolbox.register(
+            "attr_bool", self._random_boolean, self.zero_to_one_ratio)
         toolbox.register("individual", tools.initRepeat, creator.Individual,
-            toolbox.attr_bool, measure.n_X)
-        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+                         toolbox.attr_bool, measure.n_X)
+        toolbox.register(
+            "population", tools.initRepeat, list, toolbox.individual)
         toolbox.register("evaluate", self.evaluate)
         toolbox.register("mate", tools.cxTwoPoint)
         toolbox.register("mutate", tools.mutFlipBit, indpb=self.indpb)
-        toolbox.register("select", tools.selTournament, tournsize=self.tourn_size)
+        toolbox.register(
+            "select", tools.selTournament, tournsize=self.tourn_size)
 
         self.measure = measure
         self.evaluation_keywords = kwargs
@@ -103,58 +110,62 @@ class Generator:
             self.reset()
             pop = toolbox.population(n=self.pop_size)
 
-        
-        self._evolve(measure, pop, toolbox, n_gens, cxpb=self.cxpb, mutpb=self.mutpb)
-
+        self._evolve(
+            measure, pop, toolbox, n_gens, cxpb=self.cxpb, mutpb=self.mutpb)
 
     def abbreviate(self, trim=False, stats=True, keep_original_labels=True):
 
         final_items = self.best_individuals[-1]
         # If cross-validation was used, activate the hold-out subjects
         measure = self.test_measure if self.cross_val else self.measure
-        self.best = AbbreviatedMeasure(measure, final_items, abbreviator=self.abbreviator, 
-            evaluator=self.evaluator, trim=trim, stats=stats, 
-            keep_original_labels=keep_original_labels)    
+        self.best = AbbreviatedMeasure(
+            measure, final_items, abbreviator=self.abbreviator,
+            evaluator=self.evaluator, trim=trim, stats=stats,
+            keep_original_labels=keep_original_labels)
         return self.best
 
-
-    def _evolve(self, measure, population, toolbox, ngen, cxpb, mutpb, verbose=True):
-        ''' Main evolution algorithm. A tweaked version of the eaSimple algorithm included in 
-        the DEAP package that adds per-generation logging of the best individual's properties
-        and drops all the Statistics/HallOfFame stuff (since we're handling that ourselves).
-        See DEAP documentation of algorithms.eaSimple() for all arguments.
+    def _evolve(self, measure, population, toolbox, ngen, cxpb, mutpb,
+                verbose=True):
+        ''' Main evolution algorithm. A tweaked version of the eaSimple
+        algorithm included in the DEAP package that adds per-generation logging
+        of the best individual's properties and drops all the
+        Statistics/HallOfFame stuff (since we're handling that ourselves). See
+        DEAP documentation of algorithms.eaSimple() for all arguments.
         '''
 
         # if verbose:
         #     column_names = ["gen", "evals"]
         #     if stats is not None:
         #         column_names += stats.functions.keys()
-            # logger = tools.Logbook(column_names)
-            # logger.logHeader()
-            # logger.logGeneration(evals=len(population), gen=0, stats=stats)
+        # logger = tools.Logbook(column_names)
+        # logger.logHeader()
+        # logger.logGeneration(evals=len(population), gen=0, stats=stats)
 
         # Begin the generational process
         for gen in range(0, ngen):
 
             # Select the next generation individuals
             offspring = toolbox.select(population, k=len(population))
-                
+
             # Variate the pool of individuals
             offspring = algorithms.varAnd(offspring, toolbox, cxpb, mutpb)
-            
+
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
-                
+
             # Replace the current population by the offspring
-            offspring = sorted(offspring, key=lambda x: x.fitness, reverse = True)
+            offspring = sorted(
+                offspring, key=lambda x: x.fitness, reverse=True)
             population[:] = offspring
 
             # Save best individual as an AbbreviatedMeasure
             self.best_individuals.append(population[0])
-            best_abb = AbbreviatedMeasure(self.measure, population[0], abbreviator=self.abbreviator, evaluator=self.evaluator, stats=True) 
+            best_abb = AbbreviatedMeasure(
+                self.measure, population[0], abbreviator=self.abbreviator,
+                evaluator=self.evaluator, stats=True)
             self.best_measures.append(best_abb)
             r_squared = np.round(best_abb.r_squared.mean(), 2)
             n_items = np.sum(population[0])
@@ -162,24 +173,23 @@ class Generator:
             # Update the statistics with the new population
             if self.stats is not None:
                 record = self.stats.compile(population)
-                self.logbook.record(gen=gen, r_squared=r_squared, n_items=n_items, **record)
+                self.logbook.record(
+                    gen=gen, r_squared=r_squared, n_items=n_items, **record)
 
         # Save last population in case we want to resume
         self.pop = population
-            # if verbose:
-                # logger.logGeneration(evals=len(invalid_ind), gen=gen, stats=stats)
-
+        # if verbose:
+        # logger.logGeneration(evals=len(invalid_ind), gen=gen, stats=stats)
 
     def evaluate(self, individual):
-        m = self.abbreviator.abbreviate_apply(self.measure.dataset, select=individual)
+        m = self.abbreviator.abbreviate_apply(
+            self.measure.dataset, select=individual)
         loss = self.evaluator.evaluate(m, **self.evaluation_keywords)
         return (loss, )
 
-
-    def save(self):
-        ''' Save results of abbreviation. '''
-        pass
-
+    # def save(self):
+    #     ''' Save results of abbreviation. '''
+    #     pass
 
     def reset(self):
         ''' Reset the Generator, removing all history, logging, and stats. '''
@@ -194,8 +204,6 @@ class Generator:
         self.best_individuals = []
         self.best_measures = []
 
-
     def plot_history(self, **kwargs):
         ''' Convenience wrapper for history() in plot module. '''
         return plot.history(self, **kwargs)
-

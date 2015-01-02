@@ -2,11 +2,10 @@
 
 import numpy as np
 import abc
-from precis.base import Measure
-
 
 
 class Evaluator(object):
+
     ''' Base Evaluator class. '''
 
     __metaclass__ = abc.ABCMeta
@@ -21,9 +20,7 @@ class Evaluator(object):
         """
 
 
-
 class YarkoniEvaluator(Evaluator):
-
 
     def __init__(self, item_cost=0.05):
         """
@@ -35,7 +32,6 @@ class YarkoniEvaluator(Evaluator):
         """
         self.item_cost = item_cost
 
-
     def evaluate(self, measure, weights=None):
         """ The loss function used in Yarkoni (2010). Basically, total loss is 
         just the sum of two components: (a) an item cost that increases in 
@@ -46,15 +42,16 @@ class YarkoniEvaluator(Evaluator):
         # Compute R^2
         d = measure.dataset
         pred_y = np.dot(d.X, measure.key)
-        r_squared = (np.corrcoef(d.y, pred_y, rowvar=0)[0:measure.n_y, measure.n_y::] ** 2).diagonal()
+        r_squared = (np.corrcoef(d.y, pred_y, rowvar=0)[
+                     0:measure.n_y, measure.n_y::] ** 2).diagonal()
 
         # Item cost: just the scaled number of items kept
         item_cost = d.X.shape[1] * self.item_cost
 
-        # Compute variance cost--just mean variance unaccounted for in each scale
+        # Compute variance cost--just mean variance unaccounted for in each
+        # scale
         if weights is not None:
             r_squared *= weights
         variance_cost = measure.n_y - np.sum(r_squared)
 
         return float(item_cost + variance_cost)
-

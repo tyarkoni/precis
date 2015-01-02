@@ -4,7 +4,6 @@ import pandas as pd
 import logging
 from precis import stats
 from precis import plot
-import random
 import copy
 import os
 
