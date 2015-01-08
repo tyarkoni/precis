@@ -4,6 +4,7 @@ from precis.base import Measure
 
 
 class Abbreviator(object):
+
     """ Base Abbreviator class."""
     __metaclass__ = abc.ABCMeta
 
@@ -24,13 +25,12 @@ class Abbreviator(object):
     def abbreviate(self, data, select=None):
         """ Take input data and creates a new abbreviated scoring key.
         Args:
-            data (Measure or Dataset): an instance of class Measure or
-                Dataset.
-            select (list): optional columns in X to extract before
-                generating key.
+            data (Measure or Dataset): an instance of class Measure or Dataset.
+            select (list): optional columns in X to extract before generating
+                key.
         Returns:
-            A scoring key represented as a 2D numpy array, with X in rows
-            and y in columns.
+            A scoring key represented as a 2D numpy array, with X in rows and y
+            in columns.
         """
         if select is not None:
             select = np.where(select)[0]
@@ -76,7 +76,7 @@ class TopNAbbreviator(Abbreviator):
         items constitutes the scoring key for that scale. 
         """
         n_X, n_y = X.shape[1], y.shape[1]
-        key = np.zeros((n_X, n_y))
+        # key = np.zeros((n_X, n_y))
         cors = np.corrcoef(X, y, rowvar=0)[0:n_X, n_X::]
         abs_cors = np.abs(cors)
         ranks = (-abs_cors).argsort(axis=0).argsort(axis=0) + 1

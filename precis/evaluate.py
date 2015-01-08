@@ -22,14 +22,17 @@ class Evaluator(object):
 
 class YarkoniEvaluator(Evaluator):
 
+    """The evaluator used in Yarkoni (2010).
+
+    Args:
+        item_cost (float): The increase in cost/loss associated with the
+            addition of each additional item. For instance, if item_cost = 0.1,
+            a measure with 100 items will have an associated total item cost of
+            10. For details, see Yarkoni (2010).
+    """
+
     def __init__(self, item_cost=0.05):
-        """
-        Args:
-            item_cost: The increase in cost/loss associated with the addition 
-                of each additional item. For instance, if item_cost = 0.1, a 
-                measure with 100 items will have an associated total item cost 
-                of 10. For details, see Yarkoni (2010).
-        """
+
         self.item_cost = item_cost
 
     def evaluate(self, measure, weights=None):
