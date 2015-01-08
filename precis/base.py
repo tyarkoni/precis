@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 import logging
@@ -6,7 +5,7 @@ from precis import stats
 from precis import plot
 import copy
 import os
-
+from six import string_types
 
 logger = logging.getLogger('precis')
 
@@ -37,7 +36,7 @@ class Dataset(object):
     def __init__(self, X, y=None, sep='\t', missing=None, select_X=None,
                  select_y=None, keep_labels=False):
         # Read in data
-        if isinstance(X, basestring):
+        if isinstance(X, string_types):
             X = pd.read_csv(X, sep=sep).convert_objects(convert_numeric=True)
             try:
                 X = X.drop('sample', axis=1)
@@ -46,7 +45,7 @@ class Dataset(object):
         elif not hasattr(X, 'columns'):
             X = pd.DataFrame(X)
 
-        if y is not None and isinstance(y, basestring):
+        if y is not None and isinstance(y, string_types):
             y = pd.read_csv(y, sep=sep).convert_objects(convert_numeric=True)
 
         self.X = X
@@ -165,7 +164,7 @@ class Dataset(object):
             rescale (bool): If True, adjusts the total y scores to account for
                 the presence of reverse-keyed items.
         '''
-        if isinstance(key, basestring):
+        if isinstance(key, string_types):
             key = pd.read_csv(key, sep='\t', header=None).values
         y = np.dot(self.X, key)
         if rescale:
@@ -256,7 +255,7 @@ class Measure(object):
                 key. Key format is items in rows, scales in columns, with no
                 index or header.
         """
-        if isinstance(key, basestring):
+        if isinstance(key, string_types):
             key = pd.read_csv(key, sep='\t', header=None)
         if isinstance(key, pd.DataFrame):
             key = key.values
